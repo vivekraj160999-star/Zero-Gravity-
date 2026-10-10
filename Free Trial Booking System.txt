@@ -1,0 +1,670 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Menu, X, ChevronRight, Calendar, Clock, 
+  MapPin, CheckCircle, Shield, Users, 
+  Activity, Trash2, Edit2, CalendarDays,
+  Phone, Mail, Star
+} from 'lucide-react';
+
+const PROGRAMS = [
+  {
+    id: 'kids',
+    title: 'Kids BJJ',
+    desc: 'Build confidence, discipline, fitness and practical martial arts skills in a fun environment.',
+    category: 'Kids & Teens',
+    color: 'bg-blue-600'
+  },
+  {
+    id: 'adults',
+    title: 'Adult BJJ',
+    desc: 'Learn Brazilian Jiu-Jitsu, improve fitness and develop real-world grappling skills.',
+    category: 'Adults',
+    color: 'bg-red-600'
+  },
+  {
+    id: 'beginners',
+    title: 'Beginners Program',
+    desc: 'A beginner-friendly introduction for people with little or no previous experience.',
+    category: 'All Ages',
+    color: 'bg-zinc-700'
+  }
+];
+
+const MOCK_CLASSES = {
+  'Kids-Beginner': { title: 'Kids Beginner BJJ', day: 'Tuesday', time: '4:30 PM' },
+  'Kids-Some Experience': { title: 'Kids Intermediate BJJ', day: 'Thursday', time: '5:30 PM' },
+  'Kids-Advanced': { title: 'Kids Advanced BJJ', day: 'Monday', time: '5:00 PM' },
+  'Teens-Beginner': { title: 'Teens Fundamentals', day: 'Wednesday', time: '6:00 PM' },
+  'Teens-Some Experience': { title: 'Teens All Levels', day: 'Friday', time: '6:00 PM' },
+  'Teens-Advanced': { title: 'Teens Competition Prep', day: 'Saturday', time: '10:00 AM' },
+  'Adults-Beginner': { title: 'Adult Beginner BJJ', day: 'Monday', time: '6:30 PM' },
+  'Adults-Some Experience': { title: 'Adult All Levels', day: 'Wednesday', time: '7:30 PM' },
+  'Adults-Advanced': { title: 'Adult Advanced/Sparring', day: 'Friday', time: '7:00 PM' },
+};
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('home'); // home, booking, confirmation, admin
+  const [selectedProgram, setSelectedProgram] = useState('');
+  const [lastBooking, setLastBooking] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('zg_bookings');
+    if (saved) {
+      try { setBookings(JSON.parse(saved)); } catch (e) {}
+    }
+  }, []);
+
+  const saveBooking = (booking) => {
+    const newBookings = [booking, ...bookings];
+    setBookings(newBookings);
+    localStorage.setItem('zg_bookings', JSON.stringify(newBookings));
+  };
+
+  const updateBookingStatus = (id, status) => {
+    const updated = bookings.map(b => b.id === id ? { ...b, status } : b);
+    setBookings(updated);
+    localStorage.setItem('zg_bookings', JSON.stringify(updated));
+  };
+
+  const deleteBooking = (id) => {
+    const filtered = bookings.filter(b => b.id !== id);
+    setBookings(filtered);
+    localStorage.setItem('zg_bookings', JSON.stringify(filtered));
+  };
+
+  const navigateTo = (view, programId = '') => {
+    if (programId) setSelectedProgram(programId);
+    setCurrentView(view);
+    setIsMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const handleNavClick = (sectionId) => {
+    if (currentView !== 'home') {
+      setCurrentView('home');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      if (sectionId === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    setIsMenuOpen(false);
+  };
+
+  const Navbar = () => (
+    <nav className="sticky top-0 z-50 bg-zinc-950 border-b border-zinc-800">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          <div className="flex items-center cursor-pointer" onClick={() => handleNavClick('top')}>
+            <span className="text-2xl font-black text-white tracking-tighter">
+              ZERO<span className="text-red-600">GRAVITY</span>
+            </span>
+            <span className="hidden sm:inline-block ml-3 pl-3 border-l border-zinc-700 text-sm font-medium text-zinc-400">
+              BROOKLYN, NY
+            </span>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-8">
+            <button onClick={() => handleNavClick('top')} className="text-zinc-300 hover:text-white font-medium transition-colors">Home</button>
+            <button onClick={() => handleNavClick('programs')} className="text-zinc-300 hover:text-white font-medium transition-colors">Programs</button>
+            <button onClick={() => handleNavClick('about')} className="text-zinc-300 hover:text-white font-medium transition-colors">About Us</button>
+            <button onClick={() => handleNavClick('contact')} className="text-zinc-300 hover:text-white font-medium transition-colors">Contact Us</button>
+            <button onClick={() => navigateTo('booking')} className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded font-bold transition-colors">
+              BOOK FREE TRIAL
+            </button>
+          </div>
+
+          <div className="md:hidden flex items-center">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-zinc-300 hover:text-white p-2">
+              {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {isMenuOpen && (
+        <div className="md:hidden bg-zinc-900 border-b border-zinc-800 absolute w-full">
+          <div className="px-4 pt-2 pb-6 space-y-2">
+            <button onClick={() => handleNavClick('top')} className="block w-full text-left px-3 py-3 text-zinc-300 hover:text-white font-medium border-b border-zinc-800 transition-colors">Home</button>
+            <button onClick={() => handleNavClick('programs')} className="block w-full text-left px-3 py-3 text-zinc-300 hover:text-white font-medium border-b border-zinc-800 transition-colors">Programs</button>
+            <button onClick={() => handleNavClick('about')} className="block w-full text-left px-3 py-3 text-zinc-300 hover:text-white font-medium border-b border-zinc-800 transition-colors">About Us</button>
+            <button onClick={() => handleNavClick('contact')} className="block w-full text-left px-3 py-3 text-zinc-300 hover:text-white font-medium border-b border-zinc-800 transition-colors">Contact Us</button>
+            <button onClick={() => navigateTo('booking')} className="block w-full mt-4 bg-red-600 text-white text-center px-4 py-3 rounded font-bold">
+              BOOK FREE TRIAL
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+
+  const Footer = () => (
+    <footer className="bg-zinc-950 border-t border-zinc-900 py-12 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div>
+          <span className="text-xl font-black text-white tracking-tighter">
+            ZERO<span className="text-zinc-600">GRAVITY</span>
+          </span>
+          <p className="text-zinc-500 mt-2 text-sm">Brooklyn, New York</p>
+        </div>
+        <div className="text-center md:text-right">
+          <p className="text-zinc-600 text-sm">Demo Concept — Free Trial Booking Experience</p>
+          <button onClick={() => navigateTo('admin')} className="text-zinc-800 hover:text-zinc-500 text-xs mt-2 transition-colors">
+            Admin Access
+          </button>
+        </div>
+      </div>
+    </footer>
+  );
+
+  const HomeView = () => {
+    const [finderAge, setFinderAge] = useState('');
+    const [finderExp, setFinderExp] = useState('');
+
+    const matchingClass = (finderAge && finderExp) ? MOCK_CLASSES[`${finderAge}-${finderExp}`] : null;
+
+    const handleFinderSelect = () => {
+      let prog = 'beginners';
+      if (finderAge === 'Kids') prog = 'kids';
+      if (finderAge === 'Adults') prog = 'adults';
+      navigateTo('booking', prog);
+    };
+
+    return (
+      <div className="animate-in fade-in duration-500">
+        {/* Hero Section */}
+        <div className="relative bg-zinc-950 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-zinc-900 to-zinc-900 opacity-90 z-10" />
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1555597673-b21d5c935865?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-30" />
+          
+          <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-40" id="top">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700 text-zinc-300 text-sm font-medium mb-6">
+                <MapPin size={16} className="text-red-500" />
+                Brooklyn's Premier BJJ Academy
+              </div>
+              <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white tracking-tight leading-[1.1] mb-6 uppercase">
+                Start Your <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-red-700">Jiu-Jitsu</span> Journey
+              </h1>
+              <p className="text-xl text-zinc-300 mb-10 max-w-xl font-light">
+                Try a class. Meet the team. Experience Brazilian Jiu-Jitsu in a clean, welcoming, and professional environment.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button onClick={() => navigateTo('booking')} className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded font-bold text-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-900/20">
+                  BOOK A FREE TRIAL <ChevronRight className="ml-2" size={24} />
+                </button>
+                <button onClick={() => document.getElementById('programs').scrollIntoView({behavior: 'smooth'})} className="bg-zinc-800 hover:bg-zinc-700 text-white px-8 py-4 rounded font-bold text-lg transition-colors border border-zinc-700">
+                  VIEW PROGRAMS
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* About Us Section */}
+        <div id="about" className="bg-zinc-950 py-24 border-b border-zinc-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+              <div>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-600/10 mb-6">
+                  <Star className="text-red-500" size={24} />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight">More Than Just a Gym</h2>
+                <p className="text-zinc-400 text-lg leading-relaxed mb-6">
+                  At Zero Gravity BJJ Academy, we believe Brazilian Jiu-Jitsu is for everyone. Whether your goal is to learn practical self-defense, get in the best shape of your life, or compete at the highest level, our world-class instructors are dedicated to helping you achieve it.
+                </p>
+                <p className="text-zinc-400 text-lg leading-relaxed mb-8">
+                  Located in the heart of Brooklyn, we foster a safe, clean, and ego-free environment. When you step onto our mats, you become part of a family committed to mutual growth, discipline, and respect.
+                </p>
+                <button onClick={() => navigateTo('booking')} className="text-white font-bold border-b-2 border-red-600 pb-1 hover:text-red-500 transition-colors">
+                  Meet Us on the Mat
+                </button>
+              </div>
+              <div className="relative">
+                <div className="absolute inset-0 bg-red-600/20 rounded-xl transform translate-x-4 translate-y-4"></div>
+                <img 
+                  src="https://images.unsplash.com/photo-1564415315949-270b2bc6a297?auto=format&fit=crop&q=80" 
+                  alt="Students training at Zero Gravity BJJ" 
+                  className="relative rounded-xl border border-zinc-800 shadow-2xl z-10 w-full object-cover aspect-video"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Programs Section */}
+        <div id="programs" className="bg-zinc-900 py-24">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-black text-white mb-4 uppercase tracking-tight">Our Programs</h2>
+              <p className="text-zinc-400 max-w-2xl mx-auto text-lg">Classes designed for all ages and experience levels.</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {PROGRAMS.map(prog => (
+                <div key={prog.id} className="bg-zinc-950 border border-zinc-800 rounded-xl p-8 hover:border-zinc-700 transition-all flex flex-col group">
+                  <div className={`w-12 h-12 rounded-lg ${prog.color} flex items-center justify-center mb-6`}>
+                    {prog.id === 'kids' && <Shield className="text-white" size={24} />}
+                    {prog.id === 'adults' && <Users className="text-white" size={24} />}
+                    {prog.id === 'beginners' && <Activity className="text-white" size={24} />}
+                  </div>
+                  <span className="text-sm font-bold text-zinc-500 mb-2 uppercase tracking-wider">{prog.category}</span>
+                  <h3 className="text-2xl font-bold text-white mb-4">{prog.title}</h3>
+                  <p className="text-zinc-400 mb-8 flex-grow leading-relaxed">{prog.desc}</p>
+                  <button onClick={() => navigateTo('booking', prog.title)} className="w-full bg-zinc-800 group-hover:bg-zinc-700 text-white py-3 rounded font-bold transition-colors">
+                    BOOK {prog.id === 'beginners' ? 'TRIAL' : prog.id.toUpperCase() + ' TRIAL'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Class Finder Section */}
+        <div className="bg-zinc-950 py-24 border-t border-zinc-900">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-zinc-900 rounded-2xl p-8 md:p-12 border border-zinc-800 shadow-2xl">
+              <div className="text-center mb-10">
+                <h2 className="text-3xl font-black text-white mb-2">Find the Right Class</h2>
+                <p className="text-zinc-400">Answer two quick questions to find your first class.</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div>
+                  <label className="block text-sm font-bold text-zinc-300 mb-4 uppercase tracking-wide">1. Who is the class for?</label>
+                  <div className="space-y-3">
+                    {['Kids', 'Teens', 'Adults'].map(opt => (
+                      <button key={opt} onClick={() => setFinderAge(opt)} className={`w-full text-left px-5 py-4 rounded-lg border font-medium transition-all ${finderAge === opt ? 'bg-red-600/10 border-red-500 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-zinc-300 mb-4 uppercase tracking-wide">2. Experience Level</label>
+                  <div className="space-y-3">
+                    {['Beginner', 'Some Experience', 'Advanced'].map(opt => (
+                      <button key={opt} onClick={() => setFinderExp(opt)} className={`w-full text-left px-5 py-4 rounded-lg border font-medium transition-all ${finderExp === opt ? 'bg-red-600/10 border-red-500 text-white' : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {matchingClass && (
+                <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 animate-in slide-in-from-bottom-4 duration-300">
+                  <h4 className="text-zinc-400 text-sm font-bold uppercase mb-4">Recommended Class</h4>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                      <div className="text-xl font-bold text-white mb-2">{matchingClass.title}</div>
+                      <div className="flex gap-4 text-zinc-400 text-sm">
+                        <span className="flex items-center gap-1"><Calendar size={16} /> {matchingClass.day}</span>
+                        <span className="flex items-center gap-1"><Clock size={16} /> {matchingClass.time}</span>
+                      </div>
+                    </div>
+                    <button onClick={handleFinderSelect} className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded font-bold transition-colors whitespace-nowrap">
+                      CHOOSE THIS CLASS
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Us Section */}
+        <div id="contact" className="bg-zinc-950 py-24 border-t border-zinc-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-3xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight">Contact Us</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto text-lg mb-12">Have questions? We're here to help. Reach out to us or drop by the academy.</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col items-center">
+                <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-white">
+                  <MapPin size={24} />
+                </div>
+                <h4 className="text-lg font-bold text-white mb-2">Location</h4>
+                <p className="text-zinc-400">123 Main Street<br/>Brooklyn, NY 11201</p>
+              </div>
+              
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col items-center">
+                <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-white">
+                  <Phone size={24} />
+                </div>
+                <h4 className="text-lg font-bold text-white mb-2">Phone</h4>
+                <p className="text-zinc-400">(555) 123-4567<br/>Mon-Sat: 10AM - 9PM</p>
+              </div>
+
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col items-center">
+                <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-white">
+                  <Mail size={24} />
+                </div>
+                <h4 className="text-lg font-bold text-white mb-2">Email</h4>
+                <p className="text-zinc-400">info@zerogravitybjj.demo<br/>We reply within 24hrs</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const BookingView = () => {
+    const [formData, setFormData] = useState({
+      name: '', age: '', parentName: '', phone: '', email: '', 
+      program: selectedProgram || PROGRAMS[2].title, 
+      date: '', time: '6:30 PM', experience: 'None', message: ''
+    });
+    const [errors, setErrors] = useState({});
+
+    const validate = () => {
+      const newErrors = {};
+      if (!formData.name.trim()) newErrors.name = "Name is required.";
+      if (!formData.age) newErrors.age = "Age is required.";
+      if (!formData.phone.match(/^[\d\s\-\+\(\)]+$/) || formData.phone.length < 7) newErrors.phone = "Valid phone required.";
+      if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) newErrors.email = "Valid email required.";
+      if (!formData.date) newErrors.date = "Preferred date required.";
+      
+      const isMinor = parseInt(formData.age) < 18;
+      if (isMinor && !formData.parentName.trim()) newErrors.parentName = "Parent/Guardian name required for minors.";
+
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      if (validate()) {
+        const bookingRecord = {
+          id: Date.now().toString(),
+          ...formData,
+          status: 'New',
+          submittedAt: new Date().toISOString()
+        };
+        saveBooking(bookingRecord);
+        setLastBooking(bookingRecord);
+        navigateTo('confirmation');
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-zinc-950 py-12 px-4 sm:px-6 animate-in fade-in duration-300">
+        <div className="max-w-3xl mx-auto">
+          <button onClick={() => navigateTo('home')} className="text-zinc-400 hover:text-white mb-8 flex items-center font-medium transition-colors">
+            <X size={20} className="mr-1" /> Cancel Booking
+          </button>
+          
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="bg-zinc-800/50 px-8 py-6 border-b border-zinc-800">
+              <h2 className="text-3xl font-black text-white">Book Your Free Trial</h2>
+              <p className="text-zinc-400 mt-1">Fill out the details below to secure your spot on the mat.</p>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-8 space-y-8">
+              {/* Student Info */}
+              <div>
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Users className="text-red-500" size={20} /> Student Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Student Name *</label>
+                    <input type="text" className={`w-full bg-zinc-950 border ${errors.name ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Age *</label>
+                    <input type="number" min="4" max="99" className={`w-full bg-zinc-950 border ${errors.age ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.age} onChange={e => setFormData({...formData, age: e.target.value})} />
+                    {errors.age && <p className="text-red-500 text-xs mt-1">{errors.age}</p>}
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Parent/Guardian Name <span className="text-zinc-600 text-xs">(If under 18)</span></label>
+                    <input type="text" className={`w-full bg-zinc-950 border ${errors.parentName ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.parentName} onChange={e => setFormData({...formData, parentName: e.target.value})} />
+                    {errors.parentName && <p className="text-red-500 text-xs mt-1">{errors.parentName}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Phone Number *</label>
+                    <input type="tel" className={`w-full bg-zinc-950 border ${errors.phone ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Email Address *</label>
+                    <input type="email" className={`w-full bg-zinc-950 border ${errors.email ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Class Selection */}
+              <div className="pt-6 border-t border-zinc-800">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <CalendarDays className="text-red-500" size={20} /> Class Selection
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Program *</label>
+                    <select className="w-full bg-zinc-950 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-red-500" value={formData.program} onChange={e => setFormData({...formData, program: e.target.value})}>
+                      {PROGRAMS.map(p => <option key={p.id} value={p.title}>{p.title}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Preferred Date *</label>
+                    <input type="date" className={`w-full bg-zinc-950 border ${errors.date ? 'border-red-500' : 'border-zinc-700'} rounded p-3 text-white focus:outline-none focus:border-red-500`} value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                    {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Preferred Time *</label>
+                    <select className="w-full bg-zinc-950 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-red-500" value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})}>
+                      {['4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM'].map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="pt-6 border-t border-zinc-800">
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Previous Experience</label>
+                    <select className="w-full bg-zinc-950 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-red-500" value={formData.experience} onChange={e => setFormData({...formData, experience: e.target.value})}>
+                      <option value="None">None - Brand New</option>
+                      <option value="Less than 1 year">Less than 1 year</option>
+                      <option value="1-3 years">1-3 years</option>
+                      <option value="3+ years">3+ years</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-400 mb-1">Any questions or injuries we should know about?</label>
+                    <textarea rows="3" className="w-full bg-zinc-950 border border-zinc-700 rounded p-3 text-white focus:outline-none focus:border-red-500" value={formData.message} onChange={e => setFormData({...formData, message: e.target.value})}></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white py-4 rounded-lg font-black text-xl transition-all shadow-lg shadow-red-900/20 active:scale-[0.98]">
+                  BOOK MY FREE TRIAL
+                </button>
+                <p className="text-center text-zinc-500 text-xs mt-4">
+                  By booking, you agree to our privacy policy. No credit card required.
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const ConfirmationView = () => {
+    if (!lastBooking) return null;
+    
+    const handleCalendar = () => {
+      // Mock calendar integration
+      const el = document.createElement('div');
+      el.className = 'fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4';
+      el.innerHTML = `
+        <div class="bg-zinc-900 p-8 rounded-xl border border-zinc-700 max-w-sm w-full text-center">
+          <div class="w-16 h-16 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Event Added!</h3>
+          <p class="text-zinc-400 mb-6">Demo note: In a real app, this would download an .ics file or open Google Calendar.</p>
+          <button class="bg-zinc-800 text-white px-6 py-2 rounded font-bold w-full" onclick="this.parentElement.parentElement.remove()">Close</button>
+        </div>
+      `;
+      document.body.appendChild(el);
+    };
+
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center p-4 animate-in zoom-in-95 duration-500">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 md:p-12 max-w-lg w-full text-center shadow-2xl">
+          <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle className="text-green-500" size={48} />
+          </div>
+          
+          <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tight">Your Free Trial is Booked!</h2>
+          <p className="text-zinc-400 text-lg mb-8">We look forward to seeing you on the mat.</p>
+          
+          <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-6 text-left mb-8 space-y-4">
+            <div>
+              <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider">Student</p>
+              <p className="text-white font-medium text-lg">{lastBooking.name}</p>
+            </div>
+            <div>
+              <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider">Program</p>
+              <p className="text-white font-medium text-lg">{lastBooking.program}</p>
+            </div>
+            <div className="flex gap-8">
+              <div>
+                <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider">Date</p>
+                <p className="text-white font-medium text-lg">{new Date(lastBooking.date).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric'})}</p>
+              </div>
+              <div>
+                <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider">Time</p>
+                <p className="text-white font-medium text-lg">{lastBooking.time}</p>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-zinc-800">
+              <p className="text-zinc-500 text-xs uppercase font-bold tracking-wider">Location</p>
+              <p className="text-white font-medium">Zero Gravity BJJ Academy<br/><span className="text-zinc-400 font-normal">Brooklyn, New York</span></p>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <button onClick={handleCalendar} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-bold text-lg transition-colors flex items-center justify-center gap-2">
+              <Calendar size={20} /> ADD TO CALENDAR
+            </button>
+            <button onClick={() => navigateTo('home')} className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-4 rounded-lg font-bold text-lg transition-colors">
+              BACK TO HOME
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const AdminView = () => (
+    <div className="min-h-screen bg-zinc-950 p-4 sm:p-8 animate-in fade-in">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-black text-white">Admin Dashboard</h1>
+            <p className="text-zinc-400">Demo Data Management</p>
+          </div>
+          <button onClick={() => navigateTo('home')} className="bg-zinc-800 text-white px-4 py-2 rounded text-sm font-medium hover:bg-zinc-700">
+            Exit Admin
+          </button>
+        </div>
+
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-x-auto">
+          {bookings.length === 0 ? (
+            <div className="p-12 text-center text-zinc-500">
+              No trial bookings found in localStorage.
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse min-w-[800px]">
+              <thead>
+                <tr className="bg-zinc-950 text-zinc-400 text-sm uppercase tracking-wider">
+                  <th className="p-4 border-b border-zinc-800 font-bold">Student</th>
+                  <th className="p-4 border-b border-zinc-800 font-bold">Contact</th>
+                  <th className="p-4 border-b border-zinc-800 font-bold">Class Details</th>
+                  <th className="p-4 border-b border-zinc-800 font-bold">Status</th>
+                  <th className="p-4 border-b border-zinc-800 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                {bookings.map(b => (
+                  <tr key={b.id} className="hover:bg-zinc-800/50 transition-colors">
+                    <td className="p-4">
+                      <div className="font-bold text-white">{b.name}</div>
+                      <div className="text-xs text-zinc-500">Age: {b.age} {b.parentName && `(Parent: ${b.parentName})`}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm">{b.phone}</div>
+                      <div className="text-xs text-zinc-500">{b.email}</div>
+                    </td>
+                    <td className="p-4">
+                      <div className="text-sm font-medium text-white">{b.program}</div>
+                      <div className="text-xs text-zinc-500">{b.date} at {b.time}</div>
+                    </td>
+                    <td className="p-4">
+                      <select 
+                        value={b.status} 
+                        onChange={(e) => updateBookingStatus(b.id, e.target.value)}
+                        className={`text-xs font-bold px-2 py-1 rounded border outline-none ${
+                          b.status === 'New' ? 'bg-blue-900/30 text-blue-400 border-blue-900' :
+                          b.status === 'Contacted' ? 'bg-yellow-900/30 text-yellow-400 border-yellow-900' :
+                          'bg-green-900/30 text-green-400 border-green-900'
+                        }`}
+                      >
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Confirmed">Confirmed</option>
+                      </select>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button onClick={() => deleteBooking(b.id)} className="text-zinc-600 hover:text-red-500 transition-colors p-2" title="Delete Booking">
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen flex flex-col bg-zinc-950 font-sans selection:bg-red-600 selection:text-white">
+      {currentView !== 'admin' && <Navbar />}
+      
+      <main className="flex-grow flex flex-col">
+        {currentView === 'home' && <HomeView />}
+        {currentView === 'booking' && <BookingView />}
+        {currentView === 'confirmation' && <ConfirmationView />}
+        {currentView === 'admin' && <AdminView />}
+      </main>
+
+      {currentView !== 'admin' && <Footer />}
+    </div>
+  );
+}
